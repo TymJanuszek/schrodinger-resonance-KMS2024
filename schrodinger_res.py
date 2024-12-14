@@ -1,5 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import curve_fit
+
+
+def breit_wigner(x, M, G):
+    return G / ((x - M) ** 2 + G ** 2 / 4)
 
 
 class Model:
@@ -50,16 +55,17 @@ class Model:
 
         return N, x, E
 
-    def plot_save(self, filename):
+    def energy_plot_save(self, filename):
         fig = plt.figure(figsize=(15, 9))
         plt.title(filename)
         time = np.arange(0, self.duration, self.sampling * self.dt)
 
-        plt.plot(time, self.energy, "r", label="Energy")
-        plt.legend()
+        plt.plot(time, self.energy, "r")
+        plt.xlabel("Time")
+        plt.ylabel("Energy")
         plt.savefig(filename)
 
-    def plot_save_args(self, filename, titles, *args):
+    def energy_plot_save_args(self, filename, titles, *args):
         fig = plt.figure(figsize=(15, 9))
         fig.suptitle(filename)
         time = np.arange(0, self.duration, self.sampling * self.dt)
@@ -71,11 +77,13 @@ class Model:
             ax = plt.subplot(hei, wid, i + 1)
             ax.plot(time, arg)
             ax.set_title(titles[i])
+            plt.xlabel("Time")
+            plt.ylabel("Energy")
             i += 1
 
         plt.savefig(filename)
 
-    def plot_save_arr(self, filename, titles, energies):
+    def energy_plot_save_arr(self, filename, titles, energies):
         fig = plt.figure(figsize=(15, 9))
         fig.suptitle(filename)
         time = np.arange(0, self.duration, self.sampling * self.dt)
@@ -91,6 +99,21 @@ class Model:
             plt.ylabel("Energy")
             i += 1
 
+        plt.savefig(filename)
+
+    def resonance_plot_n_fit(self, maxenergies, omegas, filename):
+        fig = plt.figure(figsize=(15, 9))
+        print(maxenergies)
+        print(omegas)
+        popt, pcov = curve_fit(breit_wigner, omegas, maxenergies)
+        print(popt)
+        print(pcov)
+
+        omegas_cont = np.arange(np.min(omegas), np.max(omegas), 0.01)
+        plt.plot(omegas_cont, breit_wigner(omegas_cont, *popt) + np.min(maxenergies), "r")
+        plt.scatter(omegas, maxenergies)
+        plt.xlabel(r"\omega")
+        plt.ylabel(r"E_max")
         plt.savefig(filename)
 
     def count_Im_hamilton(self, tau, imPsi):
